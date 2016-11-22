@@ -7,8 +7,8 @@ class HackerPot:
     def __init__(self):
         pass
 
-    def intrusion(self, host):
-        log.msg('Intrusion Detected ' % host)
+    def intrusion(self, peer):
+        log.msg('Intrusion Detected from %s' % peer.host)
 
 class TelnetDebian7(protocol.Protocol): ### Set custom protocol class name
 	localhost   = None
@@ -25,8 +25,6 @@ class TelnetDebian7(protocol.Protocol): ### Set custom protocol class name
 		self.connect()
 
 		self.tx('Debian GNU/Linux 7\r\n')
-
-                hackerPot.intrusion(self.transport.getPeer())
 
 	def dataReceived(self, data):
 		self.rx(data)
@@ -103,10 +101,14 @@ class TelnetDebian7(protocol.Protocol): ### Set custom protocol class name
 		self.local_host  = self.transport.getHost()
 		self.remote_host = self.transport.getPeer()
 		self.session     = uuid.uuid1()
-		log.msg('%s %s CONNECT %s %s %s %s %s' % (
-                    self.session, self.remote_host.type, self.local_host.host,
-                    self.local_host.port, self.factory.name,
-                    self.remote_host.host, self.remote_host.port))
+
+                self.hackerPot.intrusion(self.remote_host)
+
+
+		#log.msg('%s %s CONNECT %s %s %s %s %s' % (
+                #    self.session, self.remote_host.type, self.local_host.host,
+                 #   self.local_host.port, self.factory.name,
+                 #   self.remote_host.host, self.remote_host.port))
 
 	def tx(self, data):
 		log.msg('%s %s TX %s %s %s %s %s %s' % (self.session,
