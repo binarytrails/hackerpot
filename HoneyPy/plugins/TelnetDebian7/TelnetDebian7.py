@@ -2,13 +2,7 @@ from twisted.internet import protocol, reactor, endpoints, defer
 from twisted.python import log
 import uuid
 
-
-class HackerPot:
-    def __init__(self):
-        pass
-
-    def intrusion(self, peer):
-        log.msg('Intrusion Detected from %s' % peer.host)
+from HackerPot import HackerPot
 
 class TelnetDebian7(protocol.Protocol): ### Set custom protocol class name
 	localhost   = None
@@ -19,17 +13,18 @@ class TelnetDebian7(protocol.Protocol): ### Set custom protocol class name
 	uname = None
 	pword = None
 
-        hackerPot = HackerPot()
+        def __init__(self, factory, iotPot):
+            self.factory = factory
+            self.iotPot = iotPot
 
 	def connectionMade(self):
 		self.connect()
-
-		self.tx('Debian GNU/Linux 7\r\n')
+                self.tx('Debian GNU/Linux 7\r\n')
 
 	def dataReceived(self, data):
 		self.rx(data)
 
-		if 'INIT' == self.state:
+                if 'INIT' == self.state:
 			self.state = 'NO_UNAME'
 			self.tx('Login: ')
 		elif 'NO_UNAME' == self.state:
@@ -78,8 +73,9 @@ class TelnetDebian7(protocol.Protocol): ### Set custom protocol class name
 	def authn(self, password=None):
 		authenticated = False
 
-		if 'admin' == password or 'password' == password or 'root' == password or 'password' == password:
+		if 'admin' == password or 'root' == password or 'god' == password:
 			authenticated = True
+		        self.iotPot.intrusion(self.transport.getPeer())
 
 		return authenticated
 
@@ -102,13 +98,12 @@ class TelnetDebian7(protocol.Protocol): ### Set custom protocol class name
 		self.remote_host = self.transport.getPeer()
 		self.session     = uuid.uuid1()
 
-                self.hackerPot.intrusion(self.remote_host)
+                self.iotPot.connection(self.remote_host)
 
-
-		#log.msg('%s %s CONNECT %s %s %s %s %s' % (
-                #    self.session, self.remote_host.type, self.local_host.host,
-                 #   self.local_host.port, self.factory.name,
-                 #   self.remote_host.host, self.remote_host.port))
+		log.msg('%s %s CONNECT %s %s %s %s %s' % (
+                    self.session, self.remote_host.type, self.local_host.host,
+                    self.local_host.port, self.factory.name,
+                    self.remote_host.host, self.remote_host.port))
 
 	def tx(self, data):
 		log.msg('%s %s TX %s %s %s %s %s %s' % (self.session,
@@ -127,8 +122,12 @@ class TelnetDebian7(protocol.Protocol): ### Set custom protocol class name
                     data.encode("hex")))
 
 class pluginFactory(protocol.Factory):
-	protocol = TelnetDebian7 ### Set protocol to custom protocol class name
+	protocol = TelnetDebian7
 
-	def __init__(self, name=None):
-		self.name = name or 'HackerPot'
+	def __init__(self, name, iotPot):
+		self.name = name
+                self.iotPot = iotPot
+
+        def buildProtocol(self, addr):
+            return TelnetDebian7(self, self.iotPot)
 

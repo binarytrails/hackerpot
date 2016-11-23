@@ -20,6 +20,8 @@ from twisted.python import log
 from twisted.python.log import ILogObserver, FileLogObserver
 from twisted.python.logfile import DailyLogFile
 
+from HackerPot import HackerPot
+
 # prevent creation of compiled bytecode files
 sys.dont_write_bytecode = True
 
@@ -117,10 +119,14 @@ for service in service_config.sections():
 		try:
 			if 'tcp' == protocol.lower():
 				# run tcp service
-				service_object = reactor.listenTCP(int(port), plugin.pluginFactory(service))
+				service_object = reactor.listenTCP(
+                                    int(port),
+                                    plugin.pluginFactory(service, HackerPot()))
 			else:
 				# run udp service
-				service_object = reactor.listenUDP(int(port), plugin.pluginMain(service, socket.gethostname(), port))
+				service_object = reactor.listenUDP(
+                                    int(port), plugin.pluginMain(
+                                        service, socket.gethostname(), port))
 
 			if service_object:
 				# stop services from listening immediately if not starting in daemon mode.
