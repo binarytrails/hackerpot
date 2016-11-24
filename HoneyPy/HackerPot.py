@@ -87,7 +87,7 @@ class HackerPot:
             for i in range(self.strip.numPixels()):
                 self.strip.setPixelColor(i, wheel(((i * 256 / self.strip.numPixels()) + j) & 255))
             self.strip.show()
-                time.sleep(wait_ms/1000.0)
+            time.sleep(wait_ms/1000.0)
 
     def theaterChaseRainbow(self, wait_ms=50):
         """Rainbow movie theater light style chaser animation."""
