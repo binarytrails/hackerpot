@@ -3,7 +3,7 @@
 import time
 import serial
 
-LEDS = 17
+LEDS = 60
 
 ser = serial.Serial( 
     port='/dev/ttyAMA0',
@@ -14,28 +14,30 @@ ser = serial.Serial(
     timeout=1
 )
 
+for i in range(3):
+    values = bytearray([i,250,250,250])
+    ser.write(values)
+    time.sleep(0.01)
+
 while 1:
 
-#    try:
-#        data = ser.read()
-#        print("Serial read: %s" % data)
-#    except:
-#        pass
-
-    # fastest .sleep of 0.01
-
-    #try:
-        for i in range(LEDS):
-            values = bytearray([i,200,0,0])
-            ser.write(values)
-            time.sleep(0.01)
-        
-            values = bytearray([i,0,0,0])
-            ser.write(values)
+    for i in range(14,30):
+        values = bytearray([i,250,0,0])
+        ser.write(values)
+        time.sleep(0.01)
     
-    #except (KeyboardInterrupt):                # more hard to stop
-    #    for i in range(LEDS):
-    #        values = bytearray([i,0,0,0])
-    #        ser.write(values)
-    #        time.sleep(0.01)
-               
+    for i in range(30,43):
+        values = bytearray([i,0,250,0])
+        ser.write(values)
+        time.sleep(0.01)
+    
+    for i in range(43,60):
+        values = bytearray([i,0,0,250])
+        ser.write(values)
+        time.sleep(0.01)
+    
+    for i in range(14,60):
+        values = bytearray([i,0,0,0])
+        ser.write(values)
+        time.sleep(0.01)
+    
