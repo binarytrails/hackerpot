@@ -39,7 +39,7 @@ fi
 
 if [ -z $3 ];
 then
-	interface=eth0
+	interface=wlan0
 else
 	interface=$3
 fi
