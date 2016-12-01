@@ -8,6 +8,8 @@ class HackerPot:
 
     LEDS = 60
 
+    ATTACK_ANIM_DELAY = 0.1
+
     SERIAL = serial.Serial( 
         port='/dev/ttyAMA0',
         baudrate = 57600,
@@ -56,7 +58,11 @@ class HackerPot:
             self.hackers[peer.host]['connections'] += 1
 
         # connection (evolves into blue)
-        self.animate_attack('one', [0, 0, 255], [0, -255, 255], 0.01)
+        self.animate_attack('one',
+                            [0, 0, 255],
+                            [0, -255, 255],
+                            self.ATTACK_ANIM_DELAY,
+                            reduce_by = 20)
 
     def intrusion(self, peer):
         print('Intrusion Detected from %s' % peer.host)
@@ -67,7 +73,11 @@ class HackerPot:
             self.hackers[peer.host]['intrusions'] += 1
     
         # intrustion (evolves into red)
-        self.animate_attack('two', [255, 0, 0], [255, -255, 0], 0.01)
+        self.animate_attack('two',
+                            [255, 0, 0],
+                            [255, -255, 0],
+                            self.ATTACK_ANIM_DELAY,
+                            reduce_by = 5)
 
     # animations
 
@@ -79,8 +89,7 @@ class HackerPot:
             self.SERIAL.write(bytearray([led] + rgb))
             time.sleep(delay)
 
-    def animate_attack(self, key, rgb, new_rgb, delay):
-
+    def animate_attack(self, key, rgb, new_rgb, delay, reduce_by):
         stem = None
 
         if (key == 'one'): stem = self.one
@@ -94,7 +103,7 @@ class HackerPot:
         for led in reversed(range(start, end)):
             # new color
             splixel = [led] + rgb
-            ser.write(bytearray(splixel))
+            self.SERIAL.write(bytearray(splixel))
             time.sleep(delay)
 
             # make new color influenced by attack
@@ -102,7 +111,7 @@ class HackerPot:
 
             for i in range(3):
                 # influenced by 1/10 of the applied one
-                new_color[i] = abs(stem_rgb[i] + (new_rgb[i] / 10))
+                new_color[i] = abs(stem_rgb[i] + (new_rgb[i] / reduce_by))
 
                 if (new_color[i] > 255): new_color[i] = 255
 
