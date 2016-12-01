@@ -33,7 +33,7 @@ class HackerPotAnimations:
         'end_led': 43,
         'rgb': pot.get('rgb')
     }
-    tree = {
+    three = {
         'start_led': 43,
         'end_led': 60,
         'rgb': pot.get('rgb')
@@ -97,6 +97,6 @@ while 1:
     anims.animate_attack('one', [0, 0, 255], [0, -255, 255], 0.01)
     
     # intrustion (evolves into red)
-    anims.animate_attack('two', [255, 0, 0], [255, -255, 0], 0.01)
+    anims.animate_attack('three', [255, 0, 0], [255, -255, 0], 0.01)
 
     # TODO third as ddos

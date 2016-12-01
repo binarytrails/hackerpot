@@ -37,7 +37,7 @@ class HackerPot:
         'end_led': 43,
         'rgb': pot.get('rgb')
     }
-    tree = {
+    three = {
         'start_led': 43,
         'end_led': 60,
         'rgb': pot.get('rgb')
@@ -73,7 +73,7 @@ class HackerPot:
             self.hackers[peer.host]['intrusions'] += 1
     
         # intrustion (evolves into red)
-        self.animate_attack('two',
+        self.animate_attack('three',
                             [255, 0, 0],
                             [255, -255, 0],
                             self.ATTACK_ANIM_DELAY,
