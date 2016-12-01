@@ -17,26 +17,31 @@ ser = serial.Serial(
 
 class HackerPotAnimations:
 
-    pot = dict()
-    stems = dict()
+    pot = {
+        'start_led': 0,
+        'end_led': 14,
+        'rgb': [0, 255, 0]
+    }
+    
+    one = {
+        'start_led': 14,
+        'end_led': 30,
+        'rgb': pot.get('rgb')
+    }
+    two = {
+        'start_led': 30,
+        'end_led': 43,
+        'rgb': pot.get('rgb')
+    }
+    tree = {
+        'start_led': 43,
+        'end_led': 60,
+        'rgb': pot.get('rgb')
+    }
 
     def __init__(self, serial, max_leds):
         self.SERIAL = serial
         self.MAX_LEDS = max_leds 
-
-    def init_pot(self, start_led, end_led, rgb):
-        self.pot = {
-            'start_led': start_led,
-            'end_led': end_led,
-            'rgb': rgb
-        }
-
-    def add_steam(self, key, start_led, end_led, rgb):
-        self.stems[key] = {
-            'start_led': start_led,
-            'end_led': end_led,
-            'rgb': rgb
-        }
 
     def recolorize(self, delay):
         self.colorize(self.pot['rgb'], delay)
@@ -47,10 +52,16 @@ class HackerPotAnimations:
             time.sleep(delay)
 
     def animate_attack(self, key, rgb, delay):
-        stem = self.stems[key]
-        stem_rgb = stem.get('rgb')
-        start = stem.get('start_led')
-        end = stem.get('end_led')
+
+        stem = None
+
+        if (key == 'one'): stem = self.one
+        elif (key == 'two'): stem = self.two
+        elif (key == 'three'): stem = self.three
+
+        stem_rgb = stem['rgb']
+        start = stem['start_led']
+        end = stem['end_led']
 
         for led in reversed(range(start, end)):
             # new color
@@ -58,63 +69,34 @@ class HackerPotAnimations:
             ser.write(bytearray(splixel))
             time.sleep(delay)
 
-            # back previous color
-            splixel = [led] + stem_rgb
+            # make new color influenced by attack
+            new_color = [0, 0, 0]
+
+            for i in range(3):
+                # influenced by 1/10 of the applied one
+                new_color[i] = stem_rgb[i] + (rgb[i] / 10)
+
+                if (new_color[i] > 255):
+                    new_color[i] = 255
+
+            stem['rgb'] = new_color
+
+            # apply new color
+            splixel = [led] + new_color
             self.SERIAL.write(bytearray(splixel))
             time.sleep(delay)
 
-        # influence stem color
-        for i in range(len(rgb)):
-            # by 1 / 10 of attack color
-            new_rgb = stem_rgb[i] + int(rgb[i] / 10)
-            
-            if new_rgb > 255:
-                new_rgb = 255
-
-            self.stems[key]['rgb'][i] = new_rgb
-
 anims = HackerPotAnimations(ser, 60)
 
-base_color = [0, 255, 0]
-anims.init_pot(0, 14, base_color)
+#anims.colorize([255, 0, 0], 0.01)
 anims.recolorize(0.01)
-
-anims.add_steam('r', 14, 30, base_color)
-anims.add_steam('w', 30, 43, base_color)
-anims.add_steam('b', 43, 60, base_color)
 
 # everything
 while 1:
 
-    anims.animate_attack('r', [255, 0, 0], 0.01)
+    anims.animate_attack('one', [255, 0, 0], 0.01)
+    #anims.update_stem_color('r', rgb)
+    
     #anims.animate_attack('w', [255, 255, 255], 0.1)
-    #anims.animate_attack('b', [0, 0, 255], 0.1)
+    anims.animate_attack('two', [0, 0, 255], 0.01)
 
-while 1:
-
-    #for (anim in animations):
-        #anim.render()
-
-    # red
-    for i in range(14,30):
-        values = bytearray([i,250,0,0])
-        ser.write(values)
-        time.sleep(0.01)
-    
-    # green
-    for i in range(30,43):
-        values = bytearray([i,0,250,0])
-        ser.write(values)
-        time.sleep(0.01)
-    
-    # blue
-    for i in range(43,60):
-        values = bytearray([i,0,0,250])
-        ser.write(values)
-        time.sleep(0.01)
-    
-    for i in range(14,60):
-        values = bytearray([i,0,0,0])
-        ser.write(values)
-        time.sleep(0.01)
-    
