@@ -1,29 +1,51 @@
-import time
-from neopixel import *
+#!/usr/bin/env python3
 
-# LED strip configuration:
-LED_COUNT      = 16      # Number of LED pixels.
-LED_PIN        = 18      # GPIO pin connected to the pixels (must support PWM!).
-LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
-LED_DMA        = 5       # DMA channel to use for generating signal (try 5)
-LED_BRIGHTNESS = 200     # Set to 0 for darkest and 255 for brightest
-LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
+import time
+import serial
+import Queue
 
 class HackerPot:
 
-    hackers = dict()
+    LEDS = 60
 
-    strip = Adafruit_NeoPixel(
-        LED_COUNT,
-        LED_PIN,
-        LED_FREQ_HZ,
-        LED_DMA,
-        LED_INVERT,
-        LED_BRIGHTNESS
+    SERIAL = serial.Serial( 
+        port='/dev/ttyAMA0',
+        baudrate = 57600,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        bytesize=serial.EIGHTBITS,
+        timeout=1
     )
+    
+    hackers = dict()
+    
+    pot = {
+        'start_led': 0,
+        'end_led': 14,
+        'rgb': [0, 255, 0]
+    }
+    
+    one = {
+        'start_led': 14,
+        'end_led': 30,
+        'rgb': pot.get('rgb')
+    }
+    two = {
+        'start_led': 30,
+        'end_led': 43,
+        'rgb': pot.get('rgb')
+    }
+    tree = {
+        'start_led': 43,
+        'end_led': 60,
+        'rgb': pot.get('rgb')
+    }
 
     def __init__(self):
-        self.strip.begin()
+        #self.colorize([255, 0, 0], 0.01)
+        self.recolorize(0.01)
+
+    # hackers interactions
 
     def connection(self, peer):
         print('Connection Detected from %s' % peer.host)
@@ -33,7 +55,8 @@ class HackerPot:
         else:
             self.hackers[peer.host]['connections'] += 1
 
-        self.run_all_animations()
+        # connection (evolves into blue)
+        self.animate_attack('one', [0, 0, 255], [0, -255, 255], 0.01)
 
     def intrusion(self, peer):
         print('Intrusion Detected from %s' % peer.host)
@@ -42,75 +65,51 @@ class HackerPot:
             self.hackers[peer.host] = {'connections': 0, 'intrusions': 1}
         else:
             self.hackers[peer.host]['intrusions'] += 1
+    
+        # intrustion (evolves into red)
+        self.animate_attack('two', [255, 0, 0], [255, -255, 0], 0.01)
 
-    def colorWipe(self, color, wait_ms=50):
-        """Wipe color across display a pixel at a time."""
+    # animations
 
-        for i in range(self.strip.numPixels()):
-            self.strip.setPixelColor(i, color)
-            self.strip.show()
-            time.sleep(wait_ms/1000.0)
+    def recolorize(self, delay):
+        self.colorize(self.pot['rgb'], delay)
+    
+    def colorize(self, rgb, delay):
+        for led in range(self.LEDS):
+            self.SERIAL.write(bytearray([led] + rgb))
+            time.sleep(delay)
 
-    def theaterChase(self, color, wait_ms=50, iterations=10):
-            """Movie theater light style chaser animation."""
-            for j in range(iterations):
-                for q in range(3):
-                    for i in range(0, self.strip.numPixels(), 3):
-                        self.strip.setPixelColor(i+q, color)
-                    self.strip.show()
-                    time.sleep(wait_ms/1000.0)
-                    for i in range(0, self.strip.numPixels(), 3):
-                        self.strip.setPixelColor(i+q, 0)
+    def animate_attack(self, key, rgb, new_rgb, delay):
 
-    def wheel(self, pos):
-        """Generate rainbow colors across 0-255 positions."""
-        if pos < 85:
-            return Color(pos * 3, 255 - pos * 3, 0)
-        elif pos < 170:
-            pos -= 85
-            return Color(255 - pos * 3, 0, pos * 3)
-        else:
-            pos -= 170
-            return Color(0, pos * 3, 255 - pos * 3)
+        stem = None
 
-    def rainbow(self, wait_ms=20, iterations=1):
-        """Draw rainbow that fades across all pixels at once."""
-        for j in range(256*iterations):
-            for i in range(self.strip.numPixels()):
-                self.strip.setPixelColor(i, wheel((i+j) & 255))
-            self.strip.show()
-            time.sleep(wait_ms/1000.0)
+        if (key == 'one'): stem = self.one
+        elif (key == 'two'): stem = self.two
+        elif (key == 'three'): stem = self.three
 
-    def rainbowCycle(self, wait_ms=20, iterations=5):
-        """Draw rainbow that uniformly distributes itself across all pixels."""
-        for j in range(256*iterations):
-            for i in range(self.strip.numPixels()):
-                self.strip.setPixelColor(i, wheel(((i * 256 / self.strip.numPixels()) + j) & 255))
-            self.strip.show()
-            time.sleep(wait_ms/1000.0)
+        stem_rgb = stem['rgb']
+        start = stem['start_led']
+        end = stem['end_led']
 
-    def theaterChaseRainbow(self, wait_ms=50):
-        """Rainbow movie theater light style chaser animation."""
-        for j in range(256):
-            for q in range(3):
-                for i in range(0, self.strip.numPixels(), 3):
-                    self.strip.setPixelColor(i+q, wheel((i+j) % 255))
-                self.strip.show()
-                time.sleep(wait_ms/1000.0)
-                for i in range(0, self.strip.numPixels(), 3):
-                    self.strip.setPixelColor(i+q, 0)
+        for led in reversed(range(start, end)):
+            # new color
+            splixel = [led] + rgb
+            ser.write(bytearray(splixel))
+            time.sleep(delay)
 
-    def run_all_animations(self):
-        # Color wipe animations.
-        self.colorWipe(Color(255, 0, 0))  # Red wipe
-        self.colorWipe(Color(0, 255, 0))  # Blue wipe
-        self.colorWipe(Color(0, 0, 255))  # Green wipe
-        # Theater chase animations.
-        self.theaterChase(Color(127, 127, 127))  # White theater chase
-        self.theaterChase(Color(127,   0,   0))  # Red theater chase
-        self.theaterChase(Color(  0,   0, 127))  # Blue theater chase
-        # Rainbow animations.
-        self.rainbow()
-        self.rainbowCycle()
-        self.theaterChaseRainbow()
+            # make new color influenced by attack
+            new_color = [0, 0, 0]
+
+            for i in range(3):
+                # influenced by 1/10 of the applied one
+                new_color[i] = abs(stem_rgb[i] + (new_rgb[i] / 10))
+
+                if (new_color[i] > 255): new_color[i] = 255
+
+            stem['rgb'] = new_color
+
+            # apply new color
+            splixel = [led] + new_color
+            self.SERIAL.write(bytearray(splixel))
+            time.sleep(delay)
 
