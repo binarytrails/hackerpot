@@ -51,7 +51,7 @@ class HackerPotAnimations:
             self.SERIAL.write(bytearray([led] + rgb))
             time.sleep(delay)
 
-    def animate_attack(self, key, rgb, delay):
+    def animate_attack(self, key, rgb, new_rgb, delay):
 
         stem = None
 
@@ -74,10 +74,9 @@ class HackerPotAnimations:
 
             for i in range(3):
                 # influenced by 1/10 of the applied one
-                new_color[i] = stem_rgb[i] + (rgb[i] / 10)
+                new_color[i] = abs(stem_rgb[i] + (new_rgb[i] / 10))
 
-                if (new_color[i] > 255):
-                    new_color[i] = 255
+                if (new_color[i] > 255): new_color[i] = 255
 
             stem['rgb'] = new_color
 
@@ -94,9 +93,10 @@ anims.recolorize(0.01)
 # everything
 while 1:
 
-    anims.animate_attack('one', [255, 0, 0], 0.01)
-    #anims.update_stem_color('r', rgb)
+    # connection (evolves into blue)
+    anims.animate_attack('one', [0, 0, 255], [0, -255, 255], 0.01)
     
-    #anims.animate_attack('w', [255, 255, 255], 0.1)
-    anims.animate_attack('two', [0, 0, 255], 0.01)
+    # intrustion (evolves into red)
+    anims.animate_attack('two', [255, 0, 0], [255, -255, 0], 0.01)
 
+    # TODO third as ddos
