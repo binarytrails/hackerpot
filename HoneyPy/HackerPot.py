@@ -10,7 +10,7 @@ class HackerPot:
 
     ATTACK_ANIM_DELAY = 0.1
 
-    SERIAL = serial.Serial( 
+    SERIAL = serial.Serial(
         port='/dev/ttyAMA0',
         baudrate = 57600,
         parity=serial.PARITY_NONE,
@@ -18,15 +18,15 @@ class HackerPot:
         bytesize=serial.EIGHTBITS,
         timeout=1
     )
-    
+
     hackers = dict()
-    
+
     pot = {
         'start_led': 0,
         'end_led': 14,
         'rgb': [0, 255, 0]
     }
-    
+
     one = {
         'start_led': 14,
         'end_led': 30,
@@ -50,10 +50,14 @@ class HackerPot:
     # hackers interactions
 
     def connection(self, peer):
-        print('Connection Detected from %s' % peer.host)
+        print('Connection detected from %s' % peer.host)
 
         if not peer.host in self.hackers:
-            self.hackers[peer.host] = {'connections': 1, 'intrusions': 0}
+            self.hackers[peer.host] = {
+                'connections': 1,
+                'intrusions': 0,
+                'dos': 0
+            }
         else:
             self.hackers[peer.host]['connections'] += 1
 
@@ -65,17 +69,40 @@ class HackerPot:
                             reduce_by = 20)
 
     def intrusion(self, peer):
-        print('Intrusion Detected from %s' % peer.host)
+        print('Intrusion detected from %s' % peer.host)
 
         if not peer.host in self.hackers:
-            self.hackers[peer.host] = {'connections': 0, 'intrusions': 1}
+            self.hackers[peer.host] = {
+                'connections': 0,
+                'intrusions': 1,
+                'dos': 0
+            }
         else:
             self.hackers[peer.host]['intrusions'] += 1
-    
+
         # intrustion (evolves into red)
-        self.animate_attack('three',
+        self.animate_attack('two',
                             [255, 0, 0],
                             [255, -255, 0],
+                            self.ATTACK_ANIM_DELAY,
+                            reduce_by = 5)
+
+    def dos(self, peer):
+        print('DoS detected from %s' % peer.host)
+
+        if not peer.host in self.hackers:
+            self.hackers[peer.host] = {
+                'connections': 0,
+                'intrusions': 0,
+                'dos': 1
+            }
+        else:
+            self.hackers[peer.host]['dos'] += 1
+
+        # dos (evolves into purple)
+        self.animate_attack('three',
+                            [255, 255, 255],
+                            [-255, -255, -255],
                             self.ATTACK_ANIM_DELAY,
                             reduce_by = 5)
 
@@ -83,7 +110,7 @@ class HackerPot:
 
     def recolorize(self, delay):
         self.colorize(self.pot['rgb'], delay)
-    
+
     def colorize(self, rgb, delay):
         for led in range(self.LEDS):
             self.SERIAL.write(bytearray([led] + rgb))
