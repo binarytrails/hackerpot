@@ -121,6 +121,7 @@ class HackerPot:
 
         for led in range(self.LEDS):
             self.SERIAL.write(bytearray([led] + rgb))
+            time.sleep(delay)
 
     def colorize_range(self, start_led, end_led, rgb, delay):
 
