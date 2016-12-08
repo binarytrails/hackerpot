@@ -67,6 +67,8 @@ class HackerPot:
                             [0, -255, 255],
                             self.ATTACK_ANIM_DELAY,
                             reduce_by = 20)
+        # base proportion
+        self.colorize_range(0, 6, self.one['rgb'], self.ATTACK_ANIM_DELAY)
 
     def intrusion(self, peer):
         print('Intrusion detected from %s' % peer.host)
@@ -86,6 +88,8 @@ class HackerPot:
                             [255, -255, 0],
                             self.ATTACK_ANIM_DELAY,
                             reduce_by = 5)
+        # base proportion
+        self.colorize_range(9, 14, self.two['rgb'], self.ATTACK_ANIM_DELAY)
 
     def dos(self, peer):
         print('DoS detected from %s' % peer.host)
@@ -101,10 +105,12 @@ class HackerPot:
 
         # dos (evolves into purple)
         self.animate_attack('three',
-                            [255, 255, 255],
-                            [-255, -255, -255],
+                            [80, 0, 80],
+                            [80, -255, 80],
                             self.ATTACK_ANIM_DELAY,
-                            reduce_by = 5)
+                            reduce_by = 20)
+        # base proportion
+        self.colorize_range(6, 9, self.three['rgb'], self.ATTACK_ANIM_DELAY)
 
     # animations
 
@@ -112,7 +118,13 @@ class HackerPot:
         self.colorize(self.pot['rgb'], delay)
 
     def colorize(self, rgb, delay):
+
         for led in range(self.LEDS):
+            self.SERIAL.write(bytearray([led] + rgb))
+
+    def colorize_range(self, start_led, end_led, rgb, delay):
+
+        for led in range(start_led, end_led):
             self.SERIAL.write(bytearray([led] + rgb))
             time.sleep(delay)
 
