@@ -6,7 +6,7 @@ This IoT device is controlled by the means of a ```HackerPot.py``` class that ca
 
 *Made for Concordia University in the [CART 360](https://sevaivanov.github.io/cart360) class.*
 
-![](../images/4.jpg)
+![image](images/4.jpg)
 
 ## HackerPot + HoneyPy
 
